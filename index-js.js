@@ -1,8 +1,32 @@
 console.log("Start of the Page")
 // https://viem.sh/docs/getting-started
-import { createWalletClient, custom, createPublicClient, http } from 'https://esm.sh/viem';
+import { createWalletClient, custom, createPublicClient, parseEther, defineChain } from 'https://esm.sh/viem';
+import { contractAddress, wagmiAbi } from "./constants-js.js";
+
+
 let walletClient;
 let publicClient;
+let connectedAccount;
+let currentChain;
+
+async function getCurrentChain(client) {
+    const chainId = await client.getChainId()
+    const currentChain = defineChain({
+        id: chainId,
+        name: "Custom Chain",
+        nativeCurrency: {
+            name: "Ether",
+            symbol: "ETH",
+            decimals: 18,
+        },
+        rpcUrls: {
+            default: {
+                http: ["http://localhost:8545"],
+            },
+        },
+    })
+    return currentChain
+}
 
 function makeWalletClient() {
     walletClient = createWalletClient({
@@ -14,11 +38,14 @@ async function makePublicClient() {
     publicClient = createPublicClient({
         transport: custom(window.ethereum)
     });
+    console.log("simulateContract");
     await publicClient.simulateContract({
-        address: '0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2',
+        address: contractAddress,
         abi: wagmiAbi,
-        functionName: 'mint',
-        account,
+        functionName: 'fund',
+        account: connectedAccount,
+        chain: currentChain,
+        value: parseEther(ethAmountInput.value)
     })
 }
 
@@ -34,7 +61,9 @@ async function connectAndAct(action) {
 
 async function connect() {
     async function action() {
-        const [address] = await walletClient.requestAddresses()
+        const [address] = await walletClient.requestAddresses();
+        currentChain = await getCurrentChain(walletClient);
+        connectedAccount = address;
         console.log("address:", address);
     }
     await connectAndAct(action);
