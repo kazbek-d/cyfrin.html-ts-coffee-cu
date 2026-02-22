@@ -1,6 +1,6 @@
 console.log("Start of the Page")
 // https://viem.sh/docs/getting-started
-import { createWalletClient, custom, createPublicClient, parseEther, defineChain } from 'https://esm.sh/viem';
+import { createWalletClient, custom, createPublicClient, parseEther, defineChain, formatEther } from 'https://esm.sh/viem';
 import { contractAddress, wagmiAbi } from "./constants-js.js";
 
 
@@ -38,21 +38,18 @@ async function makePublicClient() {
     publicClient = createPublicClient({
         transport: custom(window.ethereum)
     });
-    console.log("simulateContract");
-    await publicClient.simulateContract({
-        address: contractAddress,
-        abi: wagmiAbi,
-        functionName: 'fund',
-        account: connectedAccount,
-        chain: currentChain,
-        value: parseEther(ethAmountInput.value)
-    })
 }
 
 async function connectAndAct(action) {
     if (window.ethereum !== undefined) {
         makeWalletClient();
         connectBunnon.innerHTML = "Connected!";
+
+        const [address] = await walletClient.requestAddresses();
+        currentChain = await getCurrentChain(walletClient);
+        connectedAccount = address;
+        console.log("address:", address);
+
         await action();
     } else {
         connectBunnon.innerHTML = "Please install MetaMask!";
@@ -61,21 +58,40 @@ async function connectAndAct(action) {
 
 async function connect() {
     async function action() {
-        const [address] = await walletClient.requestAddresses();
-        currentChain = await getCurrentChain(walletClient);
-        connectedAccount = address;
-        console.log("address:", address);
+        console.log("connectBunnon.onclick");
     }
     await connectAndAct(action);
 }
 
 async function balance() {
-    console.log("balance");
+    async function action() {
+        await makePublicClient();
+        const balance = await publicClient.getBalance({
+            address: contractAddress,
+        })
+        console.log("balance: ", formatEther(balance));
+    }
+    await connectAndAct(action);
 }
 
 async function fund() {
     async function action() {
         await makePublicClient();
+
+        console.log("simulateContract");
+        const { request } = await publicClient.simulateContract({
+            address: contractAddress,
+            abi: wagmiAbi,
+            functionName: 'fund',
+            account: connectedAccount,
+            chain: currentChain,
+            value: parseEther(ethAmountInput.value)
+        })
+        console.log("request: ", request);
+
+        const hash = await walletClient.writeContract(request);
+        console.log("hash: ", hash);
+
         console.log(`Funding with: ${ethAmountInput.value}`);
     }
     await connectAndAct(action);
