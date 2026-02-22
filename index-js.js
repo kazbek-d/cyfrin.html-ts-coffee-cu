@@ -97,6 +97,27 @@ async function fund() {
     await connectAndAct(action);
 }
 
+async function withdraw() {
+    async function action() {
+        await makePublicClient();
+
+        console.log("simulateContract");
+        const { request } = await publicClient.simulateContract({
+            address: contractAddress,
+            abi: wagmiAbi,
+            functionName: 'withdraw',
+            account: connectedAccount,
+            chain: currentChain
+        })
+        console.log("request: ", request);
+
+        const hash = await walletClient.writeContract(request);
+        console.log("hash: ", hash);
+    }
+    await connectAndAct(action);
+}
+
+
 const connectBunnon = document.getElementById("connectBunnon");
 connectBunnon.onclick = connect;
 
@@ -107,3 +128,6 @@ const fundBunnon = document.getElementById("fundBunnon");
 fundBunnon.onclick = fund;
 
 const ethAmountInput = document.getElementById("ethAmount");
+
+const withdrawBunnon = document.getElementById("withdrawBunnon");
+withdrawBunnon.onclick = withdraw;
