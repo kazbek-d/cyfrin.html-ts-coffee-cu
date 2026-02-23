@@ -101,6 +101,14 @@ After doing the setup from above, do the following
 pnpm install
 ```
 
+```bash
+pnpm add typescript
+pnpm add viem
+pnpm tsc index-ts.ts
+pnpm add vite
+pnpm vite
+```
+
 2. Uncomment the line with `index-ts.ts` line in your `index.html` file, and comment out the line with `index-js.js`. Like this:
 
 ```html
