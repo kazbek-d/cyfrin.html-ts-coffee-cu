@@ -117,6 +117,22 @@ async function withdraw() {
     await connectAndAct(action);
 }
 
+async function getAddressToAmountFunded() {
+    async function action() {
+        await makePublicClient();
+
+        console.log("readContract");
+        const data = await publicClient.readContract({
+            address: contractAddress,
+            abi: wagmiAbi,
+            functionName: 'getAddressToAmountFunded',
+            args: [connectedAccount]
+        });
+
+        console.log(`${formatEther(data)} ether funded by address ${connectedAccount}`);
+    }
+    await connectAndAct(action);
+}
 
 const connectBunnon = document.getElementById("connectBunnon");
 connectBunnon.onclick = connect;
@@ -131,3 +147,6 @@ const ethAmountInput = document.getElementById("ethAmount");
 
 const withdrawBunnon = document.getElementById("withdrawBunnon");
 withdrawBunnon.onclick = withdraw;
+
+const amountFunded = document.getElementById("amountFunded");
+amountFunded.onclick = getAddressToAmountFunded;

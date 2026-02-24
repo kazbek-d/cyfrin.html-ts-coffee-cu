@@ -13,7 +13,7 @@ import {
 import "viem/window";
 import { contractAddress, wagmiAbi } from "./constants-ts.ts";
 
-console.log("Start of the Page");
+console.log("TS: Start of the Page");
 
 // State variables with explicit types
 let walletClient: WalletClient | undefined;
@@ -27,6 +27,7 @@ const balanceBunnon = document.getElementById("balanceBunnon") as HTMLButtonElem
 const fundBunnon = document.getElementById("fundBunnon") as HTMLButtonElement;
 const withdrawBunnon = document.getElementById("withdrawBunnon") as HTMLButtonElement;
 const ethAmountInput = document.getElementById("ethAmount") as HTMLInputElement;
+const amountFunded = document.getElementById("amountFunded") as HTMLInputElement;
 
 async function getCurrentChain(client: WalletClient): Promise<Chain> {
     const chainId = await client.getChainId();
@@ -136,8 +137,27 @@ async function withdraw(): Promise<void> {
     });
 }
 
+async function getAddressToAmountFunded(): Promise<void> {
+    await connectAndAct(async () => {
+        await makePublicClient();
+        if (!publicClient || !walletClient || !connectedAccount) return;
+
+        console.log("readContract");
+        const data = await publicClient.readContract({
+            address: contractAddress,
+            abi: wagmiAbi,
+            functionName: 'getAddressToAmountFunded',
+            args: [connectedAccount]
+        });
+
+        console.log(`${formatEther(data)} ether funded by address ${connectedAccount}`);
+    });
+}
+
+
 // Event Listeners
 connectBunnon.onclick = connect;
 balanceBunnon.onclick = balance;
 fundBunnon.onclick = fund;
 withdrawBunnon.onclick = withdraw;
+amountFunded.onclick = getAddressToAmountFunded;
